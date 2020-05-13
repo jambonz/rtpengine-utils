@@ -1,0 +1,23 @@
+{
+  "name": "@jambonz/rtpengine-utils",
+  "version": "0.1.2",
+  "description": "utility functions for managing rtpengine",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jambonz/rtpengine-utils.git"
+  },
+  "keywords": [
+    "drachtio",
+    "sip"
+  ],
+  "author": "Dave Horton",
+  "license": "MIT",
+  "dependencies": {
+    "debug": "^4.1.1",
+    "rtpengine-client": "0.0.9"
+  }
+}
