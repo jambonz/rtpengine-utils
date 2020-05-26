@@ -1,6 +1,6 @@
 {
   "name": "@jambonz/rtpengine-utils",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "utility functions for managing rtpengine",
   "main": "index.js",
   "scripts": {
@@ -10,14 +10,11 @@
     "type": "git",
     "url": "git+https://github.com/jambonz/rtpengine-utils.git"
   },
-  "publishConfig": {
-    "registry":"https://npm.pkg.github.com/"
-  },
-  "keywords": [
-    "drachtio",
-    "sip"
-  ],
   "author": "Dave Horton",
+  "bugs": {
+    "url": "https://github.com/jambonz/rtpengine-utils/issues"
+  },
+  "homepage": "https://github.com/jambonz/rtpengine-utils#readme",
   "license": "MIT",
   "dependencies": {
     "debug": "^4.1.1",
