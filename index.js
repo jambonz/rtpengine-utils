@@ -14,11 +14,11 @@ function testEngines(logger, engines, opts) {
   return setInterval(async() => {
     for (const engine of engines) {
       try {
-        const res = await engine.list({limit: 32});
+        const res = await engine.statistics();
+        logger.debug({res}, 'response from rtpengine statistics command');
         if ('ok' === res.result) {
-          engine.calls = res.calls.length;
+          engine.calls = res.statistics.currentstatistics.sessionstotal;
           engine.active = true;
-          debug(`length of response packet for ${engine.calls} calls: ${JSON.stringify(res).length}`);
           if (opts.emitter && opts.emitter instanceof Emitter) {
             opts.emitter.emit('resourceCount', {
               host: engine.host,
