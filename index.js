@@ -28,8 +28,14 @@ function testEngines(logger, engines, opts) {
           }
           continue;
         }
-        logger.debug({rtpengine: engine.host, response: res}, 'Failure response from rtpengine');
-        engine.active = false;
+        else if ('error' === res.result && res['error-reason'] && 'Unrecognized command' === res['error-reason']) {
+          // older version of rtpengine
+          engine.active = true;
+        }
+        else {
+          logger.info({rtpengine: engine.host, response: res}, 'Failure response from rtpengine');
+          engine.active = false;
+        }
       } catch (err) {
         logger.info({rtpengine: engine.host, err}, 'Failure response from rtpengine');
       }
