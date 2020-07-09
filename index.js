@@ -73,6 +73,7 @@ module.exports = function(arr, logger, opts) {
         'answer',
         'delete',
         'list',
+        'statistics',
         'startRecording',
         'stopRecording'
       ].forEach((method) => engine[method] = client[method].bind(client, engine.port, engine.host));
