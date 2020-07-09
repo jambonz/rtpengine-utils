@@ -15,7 +15,6 @@ function testEngines(logger, engines, opts) {
     for (const engine of engines) {
       try {
         const res = await engine.statistics();
-        logger.debug({res}, 'response from rtpengine statistics command');
         if ('ok' === res.result) {
           engine.calls = res.statistics.currentstatistics.sessionstotal;
           engine.active = true;
