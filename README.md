@@ -1,4 +1,4 @@
-# jambonz-rtpengine-utils
+# jambonz/rtpengine-utils ![CI](https://github.com/jambonz/rtpengine-utils/workflows/CI/badge.svg)
 
 Usage
 ```
