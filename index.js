@@ -90,7 +90,7 @@ const _setEngines = (logger, client, arr, opts) => {
  * {number} [opts.pingInterval] - length of time in secs to ping rtpengines with a 'list' command
  */
 module.exports = function(arr, logger, opts) {
-  assert.ok(Array.isArray(arr) && arr.length, 'jambonz-rtpengine-utils: missing array of host:port rtpengines');
+  assert.ok(Array.isArray(arr), 'jambonz-rtpengine-utils: missing array of host:port rtpengines');
   opts = opts || {};
   logger = logger || noopLogger;
 
