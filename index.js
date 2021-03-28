@@ -3,13 +3,17 @@ const Client = require('rtpengine-client').Client ;
 const debug = require('debug')('jambonz:rtpengines-utils');
 const Emitter = require('events');
 const noopLogger = {info: () => {}, error: () => {}};
+let engines = [];
+let timer;
 let idx = 0;
-const selectClient = (engines) => {
+
+
+const _selectClient = (engines) => {
   const active = engines.filter((c) => c.active);
   if (active.length) return active[idx++ % active.length];
 };
 
-function testEngines(logger, engines, opts) {
+const _testEngines = (logger, engines, opts) => {
   debug('starting rtpengine pings');
   return setInterval(async() => {
     for (const engine of engines) {
@@ -42,28 +46,12 @@ function testEngines(logger, engines, opts) {
       engine.active = false;
     }
   }, opts.pingInterval || 5000);
-}
+};
 
-/**
- * function that returns an object containing a function --
- * that returned function (getRtpEngine) can be called repeatedly
- * to get a set of bound functions (offer, answer, del) that
- * are associated with the rtpengine having fewest calls
- *
- * {Array} arr - an array of host:port of rtpengines and their ng control ports
- * {object} logger - pino logger
- * {object} [opts] - configuration options
- * {number} [opts.timeout] - length of time in secs to wait for rtpengine to respond to a command
- * {number} [opts.pingInterval] - length of time in secs to ping rtpengines with a 'list' command
- */
-module.exports = function(arr, logger, opts) {
-  assert.ok(Array.isArray(arr) && arr.length, 'jambonz-rtpengine-utils: missing array of host:port rtpengines');
-  opts = opts || {};
-  logger = logger || noopLogger;
+const _setEngines = (logger, client, arr, opts) => {
+  if (timer) clearInterval(timer);
 
-  const client = new Client({timeout: opts.timeout || 2500});
-
-  const engines = arr
+  engines = arr
     .map((hp) => {
       const arr = /^(.*):(.*)$/.exec(hp.trim());
       if (!arr) throw new Error('rtpengine-utils: must provide an array of host:port rtpengines');
@@ -84,14 +72,34 @@ module.exports = function(arr, logger, opts) {
       ].forEach((method) => engine[method] = client[method].bind(client, engine.port, engine.host));
       return engine;
     });
-  assert.ok(engines.length > 0, 'rtpengine-utils: must provide an array of host:port rtpengines');
   logger.info({engines}, 'jambonz-rtpengine-utils: rtpengine list');
+  _testEngines(logger, engines, opts);
+};
 
-  testEngines(logger, engines, opts);
 
-  function getRtpEngine() {
+/**
+ * function that returns an object containing a function --
+ * that returned function (getRtpEngine) can be called repeatedly
+ * to get a set of bound functions (offer, answer, del) that
+ * are associated with the rtpengine having fewest calls
+ *
+ * {Array} arr - an array of host:port of rtpengines and their ng control ports
+ * {object} logger - pino logger
+ * {object} [opts] - configuration options
+ * {number} [opts.timeout] - length of time in secs to wait for rtpengine to respond to a command
+ * {number} [opts.pingInterval] - length of time in secs to ping rtpengines with a 'list' command
+ */
+module.exports = function(arr, logger, opts) {
+  assert.ok(Array.isArray(arr) && arr.length, 'jambonz-rtpengine-utils: missing array of host:port rtpengines');
+  opts = opts || {};
+  logger = logger || noopLogger;
+
+  const client = new Client({timeout: opts.timeout || 2500});
+  _setEngines(logger, client, arr, opts);
+
+  const getRtpEngine = () => {
     debug(`selecting rtpengine from array of ${engines.length}`);
-    const engine = selectClient(engines);
+    const engine = _selectClient(engines);
     if (engine) {
       debug({engine}, 'selected engine');
       return {
@@ -100,10 +108,15 @@ module.exports = function(arr, logger, opts) {
         del: engine.delete
       };
     }
-  }
+  };
+
+  const setRtpEngines = (arr) => {
+    _setEngines(logger, client, arr, opts);
+  };
 
   return {
     client,
+    setRtpEngines,
     getRtpEngine
   };
 };
