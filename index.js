@@ -73,7 +73,7 @@ const _setEngines = (logger, client, arr, opts) => {
       return engine;
     });
   logger.info({engines}, 'jambonz-rtpengine-utils: rtpengine list');
-  _testEngines(logger, engines, opts);
+  timer = _testEngines(logger, engines, opts);
 };
 
 
