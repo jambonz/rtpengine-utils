@@ -6,7 +6,8 @@ const noopLogger = {info: () => {}, error: () => {}};
 let engines = [];
 let timer;
 let idx = 0;
-
+const PING_INTERVAL = process.env.RTPENGINE_PING_INTERVAL ? parseInt(process.env.RTPENGINE_PING_INTERVAL) : 20000;
+const myPingInterval = Math.min(60000, Math.max(PING_INTERVAL, 10000));
 
 const _selectClient = (engines) => {
   const active = engines.filter((c) => c.active);
@@ -45,7 +46,7 @@ const _testEngines = (logger, engines, opts) => {
       }
       engine.active = false;
     }
-  }, opts.pingInterval || 5000);
+  }, opts.pingInterval || myPingInterval);
 };
 
 const _setEngines = (logger, client, arr, opts) => {
