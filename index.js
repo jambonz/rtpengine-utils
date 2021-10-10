@@ -63,13 +63,22 @@ const _setEngines = (logger, client, arr, opts) => {
         port: parseInt(arr[2])
       };
       [
-        'offer',
         'answer',
         'delete',
         'list',
-        'statistics',
+        'offer',
+        'ping',
+        'query',
         'startRecording',
-        'stopRecording'
+        'stopRecording',
+        'blockDTMF',
+        'unblockDTMF',
+        'playDTMF',
+        'blockMedia',
+        'unblockMedia',
+        'playMedia',
+        'stopMedia',
+        'statistics'
       ].forEach((method) => engine[method] = client[method].bind(client, engine.port, engine.host));
       return engine;
     });
