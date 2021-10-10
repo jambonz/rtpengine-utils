@@ -115,7 +115,20 @@ module.exports = function(arr, logger, opts) {
       return {
         offer: engine.offer,
         answer: engine.answer,
-        del: engine.delete
+        del: engine.delete,
+        list: engine.list,
+        ping: engine.ping,
+        query: engine.query,
+        startRecording: engine.startRecording,
+        stopRecording: engine.stopRecording,
+        blockDTMF: engine.blockDTMF,
+        unblockDTMF: engine.unblockDTMF,
+        playDTMF: engine.playDTMF,
+        blockMedia: engine.blockMedia,
+        unblockMedia: engine.unblockMedia,
+        playMedia: engine.playMedia,
+        stopMedia: engine.stopMedia,
+        statistics: engine.statistics
       };
     }
   };
