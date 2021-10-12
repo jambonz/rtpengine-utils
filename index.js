@@ -2,12 +2,17 @@ const assert = require('assert');
 const Client = require('rtpengine-client').Client ;
 const debug = require('debug')('jambonz:rtpengines-utils');
 const Emitter = require('events');
+const dgram = require('dgram');
 const noopLogger = {info: () => {}, error: () => {}};
 let engines = [];
 let timer;
 let idx = 0;
 const PING_INTERVAL = process.env.RTPENGINE_PING_INTERVAL ? parseInt(process.env.RTPENGINE_PING_INTERVAL) : 20000;
 const myPingInterval = Math.min(60000, Math.max(PING_INTERVAL, 10000));
+const dtmfCallbacks = new Map();
+let socket;
+
+const makeKey = (callid, source_tag) => `${callid}-tag-${source_tag}`;
 
 const _selectClient = (engines) => {
   const active = engines.filter((c) => c.active);
@@ -49,7 +54,71 @@ const _testEngines = (logger, engines, opts) => {
   }, opts.pingInterval || myPingInterval);
 };
 
+const _subscribeDTMF = (engine, listenPort, logger, callid, source_tag, callback) => {
+  assert.ok(typeof callback === 'function',
+    'subscribeDTMF signature must be (logger, callid, source_tag, callback)');
+  if (!socket) {
+    socket = dgram.createSocket('udp4');
+    socket
+      .on('error', (err) => {
+        logger.info({err}, 'rtpengine-utils: _subscribeDTMF error');
+        socket.close();
+      })
+      .on('message', (message, rinfo) => {
+        try {
+          const payload = JSON.parse(message.toString('utf-8'));
+          debug({payload, rinfo}, 'rtpengine-utils - received DTMF event from rtpengine');
+          const key = makeKey(payload.callid, payload.source_tag);
+          const obj = dtmfCallbacks.get(key);
+          if (obj) {
+            if (obj.lastMessage && 0 === Buffer.compare(message, obj.lastMessage)) {
+              debug({payload, rinfo}, 'discarding duplicate dtmf report');
+            }
+            else {
+              debug(payload, `invoking DTMF callback for ${key}`);
+              obj.lastMessage = message;
+              obj.callback(payload);
+            }
+          }
+        } catch (err) {
+          logger.info({err, message}, `Error invoking callback for callid ${key}`);
+        }
+      });
+    socket.bind(listenPort);
+  }
+  const key = makeKey(callid, source_tag);
+  dtmfCallbacks.set(key, {callback});
+
+  const msg = {
+    type: 'subscribeDTMF',
+    callid,
+    source_tag,
+    listenPort
+  };
+  debug(`_subscribeDTMF: sending subscribe to ${engine.host}:${engine.port + 1 } for ${key}`);
+  socket.send(JSON.stringify(msg), engine.port + 1, engine.host, (err) => {
+    if (err) logger.info({err, callid}, 'Error subscribing for DTMF');
+  });
+};
+const _unsubscribeDTMF = (engine, logger, callid, source_tag) => {
+  assert(socket);
+  const key = `${callid}-tag-${source_tag}`;
+  const msg = {
+    type: 'unsubscribeDTMF',
+    callid,
+    source_tag
+  };
+
+  dtmfCallbacks.delete(key);
+  socket.send(JSON.stringify(msg), engine.port + 1, engine.host, (err) => {
+    if (err) logger.info({err, callid}, 'Error unsubscribing for DTMF');
+  });
+};
+
 const _setEngines = (logger, client, arr, opts) => {
+  opts = opts || {};
+  const {dtmfListenPort} = opts;
+
   if (timer) clearInterval(timer);
 
   engines = arr
@@ -80,12 +149,15 @@ const _setEngines = (logger, client, arr, opts) => {
         'stopMedia',
         'statistics'
       ].forEach((method) => engine[method] = client[method].bind(client, engine.port, engine.host));
+      if (dtmfListenPort) {
+        engine.subscribeDTMF = _subscribeDTMF.bind(null, engine, dtmfListenPort);
+        engine.unsubscribeDTMF = _unsubscribeDTMF.bind(null, engine);
+      }
       return engine;
     });
   logger.info({engines}, 'jambonz-rtpengine-utils: rtpengine list');
   timer = _testEngines(logger, engines, opts);
 };
-
 
 /**
  * function that returns an object containing a function --
@@ -128,7 +200,9 @@ module.exports = function(arr, logger, opts) {
         unblockMedia: engine.unblockMedia,
         playMedia: engine.playMedia,
         stopMedia: engine.stopMedia,
-        statistics: engine.statistics
+        statistics: engine.statistics,
+        subscribeDTMF: engine.subscribeDTMF,
+        unsubscribeDTMF: engine.unsubscribeDTMF,
       };
     }
   };
