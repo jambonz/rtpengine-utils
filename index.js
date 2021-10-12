@@ -95,7 +95,7 @@ const _subscribeDTMF = (engine, listenPort, logger, callid, source_tag, callback
     source_tag,
     listenPort
   };
-  debug({key}, `_subscribeDTMF: sending to ${engine.host}:${engine.port + 1}, now ${dtmfCallbacks.length} entries`);
+  debug({key}, `_subscribeDTMF: sending to ${engine.host}:${engine.port + 1}, now ${dtmfCallbacks.size} entries`);
   socket.send(JSON.stringify(msg), engine.port + 1, engine.host, (err) => {
     if (err) logger.info({err, callid}, 'Error subscribing for DTMF');
   });
@@ -110,7 +110,7 @@ const _unsubscribeDTMF = (engine, logger, callid, source_tag) => {
   };
 
   dtmfCallbacks.delete(key);
-  debug(`_unsubscribeDTMF: there are now ${dtmfCallbacks.length} entries`);
+  debug(`_unsubscribeDTMF: there are now ${dtmfCallbacks.size} entries`);
   socket.send(JSON.stringify(msg), engine.port + 1, engine.host, (err) => {
     if (err) logger.info({err, callid}, 'Error unsubscribing for DTMF');
   });
