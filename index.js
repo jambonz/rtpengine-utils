@@ -148,6 +148,10 @@ const _setEngines = (logger, client, arr, opts) => {
         'unblockMedia',
         'playMedia',
         'stopMedia',
+        'silenceMedia',
+        'unsilenceMedia',
+        'startForwarding',
+        'stopForwarding',
         'statistics'
       ].forEach((method) => engine[method] = client[method].bind(client, engine.port, engine.host));
       if (dtmfListenPort) {
@@ -204,6 +208,10 @@ module.exports = function(arr, logger, opts) {
         statistics: engine.statistics,
         subscribeDTMF: engine.subscribeDTMF,
         unsubscribeDTMF: engine.unsubscribeDTMF,
+        silenceMedia: engine.silenceMedia,
+        unsilenceMedia: engine.unsilenceMedia,
+        startForwarding: engine.startForwarding,
+        stopForwarding: engine.stopForwarding
       };
     }
   };
