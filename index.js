@@ -1,5 +1,5 @@
 const assert = require('assert');
-const Client = require('rtpengine-client').Client ;
+const {Client, WsClient} = require('rtpengine-client') ;
 const debug = require('debug')('jambonz:rtpengines-utils');
 const Emitter = require('events');
 const dgram = require('dgram');
@@ -132,6 +132,15 @@ const _setEngines = (logger, client, arr, opts) => {
         host: arr[1],
         port: parseInt(arr[2])
       };
+      if (!client) {
+        const wsUrl = `ws://${hp}`;
+        logger.info(`rtpengine-utils: connecting to rtpengine at ${wsUrl}`);
+        engine.client = new WsClient(wsUrl);
+        engine.client
+          .on('error', (err) => {
+            logger.error({err}, `rtpengine-utils: ws error ${wsUrl}`);
+          });
+      }
       [
         'answer',
         'delete',
@@ -153,7 +162,14 @@ const _setEngines = (logger, client, arr, opts) => {
         'startForwarding',
         'stopForwarding',
         'statistics'
-      ].forEach((method) => engine[method] = client[method].bind(client, engine.port, engine.host));
+      ].forEach((method) => {
+        if (engine.client) {
+          engine[method] = engine.client[method].bind(engine.client);
+        }
+        else {
+          engine[method] = client[method].bind(client, engine.port, engine.host);
+        }
+      });
       if (dtmfListenPort) {
         engine.subscribeDTMF = _subscribeDTMF.bind(null, engine, dtmfListenPort);
         engine.unsubscribeDTMF = _unsubscribeDTMF.bind(null, engine);
@@ -176,12 +192,13 @@ const _setEngines = (logger, client, arr, opts) => {
  * {number} [opts.timeout] - length of time in secs to wait for rtpengine to respond to a command
  * {number} [opts.pingInterval] - length of time in secs to ping rtpengines with a 'list' command
  */
-module.exports = function(arr, logger, opts) {
+module.exports = function(arr, logger, opts = {}) {
   assert.ok(Array.isArray(arr), 'jambonz-rtpengine-utils: missing array of host:port rtpengines');
-  opts = opts || {};
+  const { useWS } = opts;
   logger = logger || noopLogger;
 
-  const client = new Client({timeout: opts.timeout || 2500});
+  let client;
+  if (!useWS) client = new Client({timeout: opts.timeout || 2500});
   _setEngines(logger, client, arr, opts);
 
   const getRtpEngine = () => {
