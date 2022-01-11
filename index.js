@@ -1,5 +1,5 @@
 const assert = require('assert');
-const {Client, WsClient} = require('rtpengine-client') ;
+const {Client, TcpClient, WsClient} = require('rtpengine-client') ;
 const debug = require('debug')('jambonz:rtpengines-utils');
 const Emitter = require('events');
 const dgram = require('dgram');
@@ -116,11 +116,15 @@ const _unsubscribeDTMF = (engine, logger, callid, source_tag) => {
   });
 };
 
-const _setEngines = (logger, client, arr, opts) => {
+const _setEngines = (logger, arr, opts) => {
   opts = opts || {};
-  const {dtmfListenPort} = opts;
+  const {dtmfListenPort, protocol = 'udp'} = opts;
 
   if (timer) clearInterval(timer);
+
+  /* for udp, one client will do; for tcp or ws we need a client per socket */
+  let udpClient;
+  if (!(['tcp', 'ws'].includes(protocol))) udpClient = new Client({timeout: opts.timeout || 2500});
 
   engines = arr
     .map((hp) => {
@@ -132,15 +136,18 @@ const _setEngines = (logger, client, arr, opts) => {
         host: arr[1],
         port: parseInt(arr[2])
       };
-      if (!client) {
+      if (udpClient) engine.client = udpClient;
+      else if ('tcp' === protocol) engine.client = new TcpClient({hostport: hp, timeout: opts.timeout || 2500});
+      else {
         const wsUrl = `ws://${hp}`;
         logger.info(`rtpengine-utils: connecting to rtpengine at ${wsUrl}`);
         engine.client = new WsClient(wsUrl);
-        engine.client
-          .on('error', (err) => {
-            logger.error({err}, `rtpengine-utils: ws error ${wsUrl}`);
-          });
       }
+      engine.client.on('error', (err) => {
+        logger.error({err}, `rtpengine-utils: socket error connecting to ${hp} over ${protocol}`);
+      });
+
+      /* strap on commands */
       [
         'answer',
         'delete',
@@ -163,12 +170,8 @@ const _setEngines = (logger, client, arr, opts) => {
         'stopForwarding',
         'statistics'
       ].forEach((method) => {
-        if (engine.client) {
-          engine[method] = engine.client[method].bind(engine.client);
-        }
-        else {
-          engine[method] = client[method].bind(client, engine.port, engine.host);
-        }
+        if (udpClient) engine[method] = engine.client[method].bind(engine.client, engine.port, engine.host);
+        else engine[method] = engine.client[method].bind(engine.client);
       });
       if (dtmfListenPort) {
         engine.subscribeDTMF = _subscribeDTMF.bind(null, engine, dtmfListenPort);
@@ -194,12 +197,11 @@ const _setEngines = (logger, client, arr, opts) => {
  */
 module.exports = function(arr, logger, opts = {}) {
   assert.ok(Array.isArray(arr), 'jambonz-rtpengine-utils: missing array of host:port rtpengines');
-  const { useWS } = opts;
   logger = logger || noopLogger;
 
-  let client;
-  if (!useWS) client = new Client({timeout: opts.timeout || 2500});
-  _setEngines(logger, client, arr, opts);
+  //const client = new Client({timeout: opts.timeout || 2500});
+
+  _setEngines(logger, arr, opts);
 
   const getRtpEngine = () => {
     debug(`selecting rtpengine from array of ${engines.length}`);
@@ -234,11 +236,10 @@ module.exports = function(arr, logger, opts = {}) {
   };
 
   const setRtpEngines = (arr) => {
-    _setEngines(logger, client, arr, opts);
+    _setEngines(logger, arr, opts);
   };
 
   return {
-    client,
     setRtpEngines,
     getRtpEngine
   };

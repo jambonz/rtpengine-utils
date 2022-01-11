@@ -1,6 +1,6 @@
 {
   "name": "@jambonz/rtpengine-utils",
-  "version": "0.1.22",
+  "version": "0.2.0",
   "description": "utility functions for managing rtpengine",
   "main": "index.js",
   "scripts": {
@@ -19,7 +19,7 @@
   "license": "MIT",
   "dependencies": {
     "debug": "^4.3.1",
-    "rtpengine-client": "^0.2.1"
+    "rtpengine-client": "^0.3.0"
   },
   "devDependencies": {
     "eslint": "^7.15.0",
