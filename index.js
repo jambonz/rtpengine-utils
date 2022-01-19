@@ -144,25 +144,25 @@ const _setEngines = (logger, arr, opts) => {
         const wsUrl = `ws://${hp}`;
         logger.info(`rtpengine-utils: connecting to rtpengine at ${wsUrl}`);
         engine.client = new WsClient(wsUrl);
-        engine.dispose = ()=>{
-          if(timer){
+        engine.dispose = () => {
+          if (timer) {
             clearInterval(timer);
           }
           engine.client.close();
-        }
+        };
       }
       const bindOnEngineCommands = (engine) => {
-/* strap on commands */
-       CONSTS.ENGINE_COMMANDS.forEach((method) => {
-         engine.client[method].bind(...(udpClient ? [engine.client, engine.port, engine.host] : [engine.client]));
+        /* strap on commands */
+        CONSTS.ENGINE_COMMANDS.forEach((method) => {
+          engine.client[method].bind(...(udpClient ? [engine.client, engine.port, engine.host] : [engine.client]));
         });
       };
 
       const onError = (err) => {
         logger.error({err}, `rtpengine-utils: socket error connecting to ${hp} over ${protocol}`);
-        if(protocol === "ws"){
+        if (protocol === 'ws') {
           engine.client.close();
-          engine.client.removeAllListeners("error");
+          engine.client.removeAllListeners('error');
           engine.client = new WsClient(`ws://${hp}`);
           engine.client.on('error', onError);
           bindOnEngineCommands(engine);
@@ -172,7 +172,7 @@ const _setEngines = (logger, arr, opts) => {
 
       engine.client.on('error', onError);
       bindOnEngineCommands(engine);
-      
+
       if (dtmfListenPort) {
         engine.subscribeDTMF = _subscribeDTMF.bind(null, engine, dtmfListenPort);
         engine.unsubscribeDTMF = _unsubscribeDTMF.bind(null, engine);
@@ -231,8 +231,8 @@ module.exports = function(arr, logger, opts = {}) {
         unsilenceMedia: engine.unsilenceMedia,
         startForwarding: engine.startForwarding,
         stopForwarding: engine.stopForwarding,
-        dispose: engine.dispose || function () {
-            logger.warn({}, "not implemented");
+        dispose: engine.dispose || function() {
+          logger.warn({}, 'not implemented');
         }
       };
     }
