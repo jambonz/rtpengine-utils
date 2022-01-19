@@ -154,7 +154,10 @@ const _setEngines = (logger, arr, opts) => {
       const bindOnEngineCommands = (engine) => {
         /* strap on commands */
         CONSTS.ENGINE_COMMANDS.forEach((method) => {
-          engine.client[method].bind(...(udpClient ? [engine.client, engine.port, engine.host] : [engine.client]));
+          engine[method] = engine.client[method].bind(...(udpClient ?
+            [engine.client, engine.port, engine.host] :
+            [engine.client])
+          );
         });
       };
 
