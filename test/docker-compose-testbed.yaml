@@ -1,0 +1,20 @@
+version: '3'
+
+networks:
+  rtpengine-utils:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.38.0.0/16
+
+services:  
+  rtpengine:
+    image: drachtio/rtpengine:latest
+    command: rtpengine --interface 172.38.0.14 --listen-udp=22222 --listen-tcp-ng=22222 --listen-http=8088
+    ports:
+      - "22222:22222/udp"
+      - "22222:22222/tcp"
+      - "8088:8088/tcp"
+    networks:
+      rtpengine-utils:
+        ipv4_address: 172.38.0.14
