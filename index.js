@@ -40,7 +40,7 @@ const _setEngines = (logger, arr, opts) => {
     return engine;
   });
 
-  if (engines[0].isConnectionLess) {
+  if (engines.length && engines[0].isConnectionLess) {
     /* ping intermittently */
     timer = _testEngines(logger, engines, opts);
   }
