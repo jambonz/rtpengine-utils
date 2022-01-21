@@ -63,7 +63,7 @@ module.exports = function(arr, logger, opts = {}) {
   assert.ok(Array.isArray(arr), 'jambonz-rtpengine-utils: missing array of host:port rtpengines');
   logger = logger || noopLogger;
 
-  const getRtpEngine = async() => {
+  const getRtpEngine = () => {
     debug(`selecting rtpengine from array of ${engines.length}`);
     const engine = _selectEngine(engines);
     if (engine) {
