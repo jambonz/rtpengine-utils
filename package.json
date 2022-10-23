@@ -1,6 +1,6 @@
 {
   "name": "@jambonz/rtpengine-utils",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "utility functions for managing rtpengine",
   "main": "index.js",
   "scripts": {
