@@ -23,7 +23,7 @@ test('UDP tests', async(t) => {
   await waitFor(3);
   try {
     const rtpengines = ['127.0.0.1:22222'];
-    const {setRtpEngines, getRtpEngine} = fn(rtpengines, noLogger, {protocol: 'udp'});
+    const {setRtpEngines, getRtpEngine} = fn(rtpengines, noLogger, {protocol: 'udp', timeout: 2000});
     const {ping, statistics} = await getRtpEngine();
   
     t.ok(typeof ping == 'function', 'created udp socket');
@@ -43,7 +43,7 @@ test('UDP tests', async(t) => {
 test('TCP tests', async(t) => {
   try {
     const rtpengines = ['127.0.0.1:22222'];
-    const {setRtpEngines, getRtpEngine} = fn(rtpengines, noLogger, {protocol: 'tcp'});
+    const {setRtpEngines, getRtpEngine} = fn(rtpengines, noLogger, {protocol: 'tcp', timeout: 2000});
     await waitFor(1);
     const {ping, statistics} = await getRtpEngine();
   
@@ -64,7 +64,7 @@ test('TCP tests', async(t) => {
 test('WS tests', async(t) => {
   try {
     const rtpengines = ['127.0.0.1:8088'];
-    const {setRtpEngines, getRtpEngine} = fn(rtpengines, noLogger, {protocol: 'ws'});
+    const {setRtpEngines, getRtpEngine} = fn(rtpengines, noLogger, {protocol: 'ws', timeout: 2000});
     await waitFor(1);
     const {ping, statistics} = await getRtpEngine();
   
