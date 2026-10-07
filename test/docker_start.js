@@ -2,9 +2,13 @@ const test = require('tape').test ;
 const exec = require('child_process').exec ;
 
 test('starting docker network..', (t) => {
-  exec(`docker-compose -f ${__dirname}/docker-compose-testbed.yaml up -d`, (err, stdout, stderr) => {
+  exec(`docker compose -f ${__dirname}/docker-compose-testbed.yaml up -d`, (err, stdout, stderr) => {
+    if (err) {
+      console.error(stderr);
+      process.exit(1);
+    }
     t.pass('docker is up');
-    t.end(err);
+    t.end();
   });
   
 });
